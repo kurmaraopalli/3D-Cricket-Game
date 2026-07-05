@@ -1,6 +1,8 @@
 # 🏏 Hyper-3D Cricket: WebGL Championship
 
-A browser-native, high-fidelity 3D cricket simulation built from the ground up using **Three.js** and custom physics engines. Experience realistic ball trajectory, dynamic batting collision, fielders with catch zones, and procedural stadium rendering.
+A browser-native, high-fidelity 3D cricket simulation built from the ground up using **Three.js** and custom physics engines. Experience realistic ball trajectory, dynamic batting collision, fielders with catch zones, procedural stadium rendering, and immersive audio effects.
+
+**Developer**: Khavish Kumar Palli
 
 ---
 
@@ -8,16 +10,21 @@ A browser-native, high-fidelity 3D cricket simulation built from the ground up u
 
 1. **Graphics Render Engine**: **Three.js (r128)**
    - ACES Filmic Tone Mapping for premium photorealism.
-   - PCFSoft Shadow Maps for soft, realistic shadows cast by stadium floodlights.
-   - Exponential Fog (`THREE.FogExp2`) for a misty, atmospheric night-stadium look.
+   - PCFSoft Shadow Maps for soft, realistic shadows.
+   - Bright cyan sky with procedural sun and clouds for daytime atmosphere.
+   - Exponential Fog (`THREE.FogExp2`) for atmospheric depth.
 2. **Logic & Scripting**: **Modern JavaScript (ES6 Modules)**
    - Modular, decoupled architecture.
    - Zero compilation/bundling overhead (native browser modules).
 3. **Styling & HUD**: **Vanilla CSS3 & HTML5**
    - Premium Glassmorphism styling utilizing `backdrop-filter: blur(16px)` and variable-based design systems.
    - Responsive flexbox grids and dynamic CSS animation keyframes.
+   - Mobile-optimized layout with touch-friendly controls.
 4. **Assets & Textures**: **Procedural Canvas Textures**
    - Pure JS procedural generation for outfield turf stripes, wicket clay textures, and crease markings, ensuring instantaneous load times and zero network overhead.
+5. **Audio System**: **Web Audio API**
+   - Procedural sound generation for bat hits, wickets, crowd cheers, and ambient stadium noise.
+   - No external audio files required - all sounds generated in real-time.
 
 ---
 
@@ -33,6 +40,7 @@ graph TD
     PhysicsJS["physics.js (Trajectory & Collisions)"]
     GameLogicJS["gameLogic.js (Runs & Wickets State)"]
     InputJS["input.js (Mouse / Touch Bat Interaction)"]
+    AudioJS["audio.js (Sound Effects)"]
 
     %% Flow
     IndexHTML -->|Bootstrap| AppJS
@@ -40,9 +48,11 @@ graph TD
     AppJS -->|Frame Tick / Delta| PhysicsJS
     InputJS -->|Raycast & Lerp Positions| AppJS
     PhysicsJS -->|State Transitions & Alerts| AppJS
+    PhysicsJS -->|Trigger Sounds| AudioJS
     PhysicsJS -->|Record Runs / Wickets / Dots| GameLogicJS
     GameLogicJS -->|Update HUD DOM| IndexHTML
     AppJS -->|Read Game State| GameLogicJS
+    AppJS -->|Init Audio| AudioJS
 ```
 
 ### Module Breakdown
@@ -73,6 +83,21 @@ graph TD
 - Uses raycasting to map 2D screen coordinate movements (mouse or touch drags) onto a 3D plane in front of the wickets.
 - Applies linear interpolation (lerp) to bat movements to give them weight and momentum.
 - Resolves swing kinematics (backlift, contact point, and follow-through rotation).
+
+#### 5. [audio.js](file:///c:/Users/kurma/OneDrive/Documents/Workspace/3D-Cricket-Game/js/audio.js) (Audio System)
+- Implements Web Audio API for procedural sound generation.
+- Provides sound effects for: bat hits, wickets breaking, crowd cheers, ball bounces, and ambient stadium noise.
+- All sounds generated in real-time without external audio files.
+
+---
+
+## ✨ Visual Features
+
+- **Bright Cyan Sky**: Daytime atmosphere with vibrant blue-cyan sky color
+- **Procedural Sun & Clouds**: Dynamically generated sun with glow effect and scattered cloud formations
+- **Developer Watermark**: "Khavish Kumar Palli" watermark displayed in the top-left corner
+- **Mobile-Optimized UI**: Responsive design with touch-friendly controls and adaptive layouts for mobile devices
+- **Glassmorphism HUD**: Modern glass-effect overlays with backdrop blur and smooth animations
 
 ---
 
