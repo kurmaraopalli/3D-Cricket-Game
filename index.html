@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏏 Hyper-3D Cricket: WebGL Championship</title>
+  
+  <!-- SEO & Fonts -->
+  <meta name="description" content="A high-fidelity 3D Cricket Game built with Three.js. Experience realistic physics, dynamic batting reflection, and stadium crowd simulation directly in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-primary: #080c16;
+      --bg-surface: rgba(16, 24, 48, 0.75);
+      --bg-surface-hover: rgba(26, 38, 74, 0.9);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-color: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.4);
+      --danger-color: #ff3b6b;
+      --danger-glow: rgba(255, 59, 107, 0.4);
+      --font-outfit: 'Outfit', sans-serif;
+      --font-space: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-primary);
+      font-family: var(--font-outfit);
+      color: var(--text-main);
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* GLASSMORPHISM HUD OVERLAYS */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+    }
+
+    .pointer-events-auto {
+      pointer-events: auto;
+    }
+
+    /* TOP PANEL */
+    .top-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .scoreboard {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 24px;
+      min-width: 280px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      animation: slideInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scoreboard-title {
+      font-family: var(--font-space);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .score-main {
+      font-size: 38px;
+      font-weight: 800;
+      font-family: var(--font-space);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .runs-wickets {
+      color: var(--accent-color);
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .overs {
+      font-size: 18px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* GAME STATE NOTIFICATION CARD */
+    .game-notification {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: rgba(8, 12, 22, 0.85);
+      border: 2px solid var(--accent-color);
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-family: var(--font-space);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent-color);
+      box-shadow: 0 0 30px var(--accent-glow);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 15;
+      text-align: center;
+    }
+
+    .game-notification.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .game-notification.wicket {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+      box-shadow: 0 0 30px var(--danger-glow);
+    }
+
+    /* RIGHT INFO BAR */
+    .right-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .speedometer {
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 140px;
+    }
+
+    .speed-val {
+      font-family: var(--font-space);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    /* SCREEN OVERLAYS: START / GAME OVER */
+    .screen-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(16, 24, 48, 0.95) 0%, rgba(8, 12, 22, 0.99) 100%);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      transition: opacity 0.5s ease;
+    }
+
+    .screen-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .panel-card {
+      background: rgba(18, 28, 56, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      transform: scale(0.95);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen-overlay:not(.hidden) .panel-card {
+      transform: scale(1);
+    }
+
+    .app-title {
+      font-family: var(--font-space);
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-color) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .app-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* CONTROLS GUIDE */
+    .controls-guide {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 28px;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .guide-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 4px;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-key {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: var(--font-space);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* BUTTONS */
+    .btn-glow {
+      display: inline-block;
+      width: 100%;
+      background: linear-gradient(135deg, #00ff88 0%, #00b4d8 100%);
+      color: #080c16;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-family: var(--font-space);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-glow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+      filter: brightness(1.1);
+    }
+
+    .btn-glow:active {
+      transform: translateY(1px);
+    }
+
+    /* SELECT BOWLER / LEVEL STYLE */
+    .mode-select {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: var(--font-space);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-btn.active, .mode-btn:hover {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    /* HELP & SETTINGS TRIGGERS */
+    .settings-btn {
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+    }
+
+    .settings-btn:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    /* FOOTER CREASE INDICATOR */
+    .action-prompt {
+      align-self: center;
+      background: rgba(16, 24, 48, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 30px;
+      padding: 8px 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    /* KEYFRAMES FOR ANIMATIONS */
+    @keyframes slideInDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 600px) {
+      .hud-layer {
+        padding: 12px;
+      }
+      .scoreboard {
+        min-width: calc(100vw - 24px);
+      }
+      .right-bar {
+        display: none; /* Hide speedo on mobile to save space */
+      }
+      .panel-card {
+        padding: 24px;
+      }
+      .app-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL Render Canvas Wrapper -->
+  <div id="canvas-container"></div>
+
+  <!-- Game HUD Layer (Interactive & Display) -->
+  <div class="hud-layer">
+    <!-- Top Stats HUD -->
+    <div class="top-panel">
+      <div class="scoreboard pointer-events-auto">
+        <div class="scoreboard-title">Super Overs League</div>
+        <div class="score-main">
+          <span class="runs-wickets" id="score-runs-wickets">0/0</span>
+          <span class="overs" id="score-overs">(0.0 Overs)</span>
+        </div>
+        
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="stat-label">Target</span>
+            <span class="stat-val" id="target-display">30 Runs</span>
+          </div>
+          <div class="stat-item" style="align-items: center;">
+            <span class="stat-label">Strikes Left</span>
+            <span class="stat-val" id="strikes-display">6 Balls</span>
+          </div>
+          <div class="stat-item" style="align-items: flex-end;">
+            <span class="stat-label">High Score</span>
+            <span class="stat-val" id="highscore-display">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings/Info Toggle Trigger -->
+      <div class="right-bar pointer-events-auto">
+        <div class="speedometer">
+          <span class="stat-label">Bowled Speed</span>
+          <span class="speed-val" id="speed-display">-- km/h</span>
+        </div>
+        <button class="settings-btn" id="help-toggle-btn" title="How to Play">?</button>
+      </div>
+    </div>
+
+    <!-- Center Pop-up Alert Notification (Runs, Wickets, Bound) -->
+    <div class="game-notification" id="alert-card">6 RUNS!</div>
+
+    <!-- Lower Assist Prompt -->
+    <div class="action-prompt">
+      Move Mouse to Align Bat • Left-Click / Space to Swing
+    </div>
+  </div>
+
+  <!-- Start Screen Overlay -->
+  <div class="screen-overlay" id="start-overlay">
+    <div class="panel-card">
+      <div class="app-title">HYPER-3D CRICKET</div>
+      <div class="app-desc">
+        Take control at the batsman's crease in a stunning, real-time 3D simulation. 
+        Timing and position are everything. Swing through the ball to hit boundaries and avoid the fielders.
+      </div>
+
+      <div class="guide-title">Choose Bowler Profile</div>
+      <div class="mode-select">
+        <button class="mode-btn active" data-difficulty="medium">Medium Pace (120 km/h)</button>
+        <button class="mode-btn" data-difficulty="fast">Fast Bowler (145 km/h)</button>
+        <button class="mode-btn" data-difficulty="spin">Leg Spin (85 km/h)</button>
+      </div>
+
+      <div class="controls-guide">
+        <div class="guide-title">Controls Guide</div>
+        <div class="control-row">
+          <span>Move Cricket Bat</span>
+          <span class="control-key">Mouse Movement</span>
+        </div>
+        <div class="control-row">
+          <span>Swing Bat</span>
+          <span class="control-key">Left-Click / Spacebar</span>
+        </div>
+        <div class="control-row">
+          <span>Defend Stumps</span>
+          <span>Prevent the ball from hitting wickets</span>
+        </div>
+      </div>
+
+      <button class="btn-glow" id="start-play-btn">START INNINGS</button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen Overlay -->
+  <div class="screen-overlay hidden" id="gameover-overlay">
+    <div class="panel-card">
+      <div class="app-title" id="gameover-title">INNINGS COMPLETED</div>
+      <div class="app-desc" id="gameover-desc">
+        Calculating score summary...
+      </div>
+
+      <div class="controls-guide">
+        <div class="guide-title">Innings Summary</div>
+        <div class="control-row">
+          <span>Total Score</span>
+          <span class="control-key" id="summary-score" style="color:var(--accent-color)">--/--</span>
+        </div>
+        <div class="control-row">
+          <span>Balls Faced</span>
+          <span id="summary-balls">--</span>
+        </div>
+        <div class="control-row">
+          <span>Strike Rate</span>
+          <span id="summary-sr">--</span>
+        </div>
+      </div>
+
+      <button class="btn-glow" id="restart-play-btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <!-- ES6 Module Scripts -->
+  <script type="module">
+    import { initGame } from './js/app.js';
+    initGame();
+  </script>
+</body>
+</html>
