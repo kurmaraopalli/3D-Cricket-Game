@@ -181,10 +181,10 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
     
     // C. Collision with Cricket Bat
     // Bat crease is at Z = 19.5. Use a swept intersection against the bat's box to make hits feel far more reliable.
-    if (ballPos.z >= 18.5 && ballPos.z <= 19.9) {
+    if (ballPos.z >= 18.0 && ballPos.z <= 20.0) {
       const batX = batGroup.position.x;
       const batY = batGroup.position.y;
-      const batHalfExtents = { x: 0.55, y: 0.95, z: 0.22 };
+      const batHalfExtents = { x: 0.8, y: 1.2, z: 0.5 }; // Increased collision box for easier hitting
       const batCenter = new THREE.Vector3(batX, batY, 19.5);
 
       const didHitBat = segmentIntersectsBox(
@@ -210,8 +210,8 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
         let hitLabel = 'Defended!';
         
         if (isSwinging) {
-          // Sweet spot timing: swing progress is between 0.25 and 0.6
-          if (swingProgress >= 0.25 && swingProgress <= 0.65) {
+          // Sweet spot timing: swing progress is between 0.2 and 0.7 (widened for easier hits)
+          if (swingProgress >= 0.2 && swingProgress <= 0.7) {
             hitSpeedMultiplier = 1.7 + Math.random() * 0.4; // Solid middle!
             hitLabel = 'Smashed!';
           } else {
