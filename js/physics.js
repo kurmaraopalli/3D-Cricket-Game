@@ -1,5 +1,6 @@
 import { recordRuns, recordWicket } from './gameLogic.js';
 import { segmentIntersectsBox } from './collision.js';
+import { playBatHitSound, playWicketsSound, playCrowdCheer, playBounceSound } from './audio.js';
 
 let appCallbacks = {
   displayHUDAlert: () => {},
@@ -147,6 +148,7 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
     if (ballPos.y <= ballRadius && ballPos.x >= -1.8 && ballPos.x <= 1.8 && ballPos.z >= -13 && ballPos.z <= 22) {
       ballPos.y = ballRadius;
       ballVel.y = -ballVel.y * PITCH_RESTITUTION;
+      playBounceSound();
       
       // Apply pitch friction
       ballVel.z *= (1 - PITCH_FRICTION);
@@ -171,6 +173,7 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
         // CLEAN BOWLED!
         appCallbacks.setGameStatus('out');
         recordWicket();
+        playWicketsSound();
         appCallbacks.displayHUDAlert('CLEAN BOWLED! OUT!', 'wicket');
         return;
       }
@@ -195,6 +198,7 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
         // Player hit the ball!
         isHitByBat = true;
         appCallbacks.setGameStatus('batted');
+        playBatHitSound();
         bounceCount = 0; // Reset bounce count on hit so aerial catches work
         timeInFlight = 0; // Reset time in flight on hit for caught out check
         
@@ -278,9 +282,11 @@ export function updatePhysics(dt, ballMesh, batGroup, batProps, stumpsGroup) {
       const hadOutfieldBounce = (ballFirstBouncedPos !== null);
       if (hadOutfieldBounce) {
         recordRuns(4);
+        playCrowdCheer();
         appCallbacks.displayHUDAlert('FOUR RUNS! 🏏', 'normal');
       } else {
         recordRuns(6);
+        playCrowdCheer();
         appCallbacks.displayHUDAlert('💥 SIX RUNS! OUT OF THE PARK!', 'normal');
       }
       

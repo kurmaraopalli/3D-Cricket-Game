@@ -1,6 +1,7 @@
 import { updatePhysics, resetBallPhysics, getBallPosition, initPhysicsCallbacks, getLastDeliverySpeed, fielders } from './physics.js';
 import { updateGameState, initGameState, getGameState, recordDotBall } from './gameLogic.js';
 import { initInput, updateBatPosition, getBatProperties, triggerSwing } from './input.js';
+import { initAudio, playBatHitSound, playWicketsSound, playCrowdCheer, playAmbientNoise, playBounceSound } from './audio.js';
 
 // Three.js instances
 let scene, camera, renderer;
@@ -36,6 +37,9 @@ export let difficulty = 'medium';
 
 export function initGame() {
   clock = new THREE.Clock();
+  
+  // Initialize audio system
+  initAudio();
   
   // Set up Three.js Scene, Camera, Renderer
   initThree();
@@ -79,8 +83,8 @@ function initThree() {
   
   // 1. Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x87CEEB); // Sky blue
-  scene.fog = new THREE.FogExp2(0x87CEEB, 0.006); // Daytime atmosphere
+  scene.background = new THREE.Color(0x00BFFF); // Bright cyan
+  scene.fog = new THREE.FogExp2(0x00BFFF, 0.003); // Lighter daytime atmosphere
   
   // 2. Camera
   // Placed behind the batsman, looking down the pitch towards the bowler
@@ -257,7 +261,7 @@ function createStadium() {
   // 5. Crowd Stands (Low poly geometric circles surrounding the stadium)
   const standGeo = new THREE.CylinderGeometry(105, 120, 15, 32, 4, true);
   const standMat = new THREE.MeshStandardMaterial({
-    color: 0x111625,
+    color: 0x4a5568,
     roughness: 0.9,
     metalness: 0.2,
     side: THREE.BackSide
@@ -583,6 +587,7 @@ function triggerPlayerSwing() {
 function startNewInnings() {
   initGameState();
   isGameRunning = true;
+  playAmbientNoise();
   resetForNextBall();
 }
 
