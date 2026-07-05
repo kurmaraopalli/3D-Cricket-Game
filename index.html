@@ -54,6 +54,21 @@
       z-index: 1;
     }
 
+    /* WATERMARK */
+    .watermark {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-family: var(--font-space);
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      z-index: 20;
+      pointer-events: none;
+    }
+
     /* GLASSMORPHISM HUD OVERLAYS */
     .hud-layer {
       position: absolute;
@@ -255,6 +270,7 @@
       font-size: 32px;
       font-weight: 700;
       background: linear-gradient(135deg, #ffffff 0%, var(--accent-color) 100%);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 12px;
@@ -422,19 +438,61 @@
     /* MOBILE RESPONSIVE */
     @media (max-width: 600px) {
       .hud-layer {
-        padding: 12px;
+        padding: 8px;
+      }
+      .watermark {
+        font-size: 9px;
+        top: 6px;
+        left: 6px;
       }
       .scoreboard {
-        min-width: calc(100vw - 24px);
+        min-width: calc(100vw - 16px);
+        padding: 12px 16px;
+      }
+      .score-main {
+        font-size: 28px;
+      }
+      .stats-row {
+        font-size: 11px;
       }
       .right-bar {
         display: none; /* Hide speedo on mobile to save space */
       }
       .panel-card {
-        padding: 24px;
+        padding: 20px 16px;
+        max-width: 100%;
       }
       .app-title {
-        font-size: 24px;
+        font-size: 20px;
+      }
+      .app-desc {
+        font-size: 13px;
+      }
+      .controls-guide {
+        padding: 12px;
+      }
+      .control-row {
+        font-size: 12px;
+      }
+      .mode-select {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .mode-btn {
+        padding: 12px;
+        font-size: 11px;
+      }
+      .btn-glow {
+        padding: 14px 24px;
+        font-size: 16px;
+      }
+      .game-notification {
+        font-size: 18px;
+        padding: 10px 20px;
+      }
+      .action-prompt {
+        font-size: 11px;
+        padding: 6px 16px;
       }
     }
   </style>
@@ -443,6 +501,9 @@
 
   <!-- WebGL Render Canvas Wrapper -->
   <div id="canvas-container"></div>
+
+  <!-- Watermark -->
+  <div class="watermark">Khavish Kumar Palli</div>
 
   <!-- Game HUD Layer (Interactive & Display) -->
   <div class="hud-layer">

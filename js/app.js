@@ -79,8 +79,8 @@ function initThree() {
   
   // 1. Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x060913); // Dark spacey blue
-  scene.fog = new THREE.FogExp2(0x060913, 0.008); // Night lights atmosphere
+  scene.background = new THREE.Color(0x87CEEB); // Sky blue
+  scene.fog = new THREE.FogExp2(0x87CEEB, 0.006); // Daytime atmosphere
   
   // 2. Camera
   // Placed behind the batsman, looking down the pitch towards the bowler
@@ -269,6 +269,9 @@ function createStadium() {
   // Generate visual crowd sparks
   createCrowdVisuals();
   
+  // Add sun and clouds to the sky
+  createSkyElements();
+  
   // Render fielders inside stadium
   create3DFielders();
 }
@@ -348,6 +351,67 @@ function createCrowdVisuals() {
   
   const crowdParticles = new THREE.Points(particleGeo, particleMat);
   scene.add(crowdParticles);
+}
+
+function createSkyElements() {
+  // Create Sun
+  const sunGeo = new THREE.SphereGeometry(8, 32, 32);
+  const sunMat = new THREE.MeshBasicMaterial({ 
+    color: 0xFFD700,
+    transparent: true,
+    opacity: 0.9
+  });
+  const sun = new THREE.Mesh(sunGeo, sunMat);
+  sun.position.set(50, 60, -80);
+  scene.add(sun);
+
+  // Create Sun glow
+  const sunGlowGeo = new THREE.SphereGeometry(12, 32, 32);
+  const sunGlowMat = new THREE.MeshBasicMaterial({ 
+    color: 0xFFFF00,
+    transparent: true,
+    opacity: 0.3
+  });
+  const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
+  sunGlow.position.copy(sun.position);
+  scene.add(sunGlow);
+
+  // Create Clouds
+  const cloudPositions = [
+    { x: -40, y: 45, z: -60 },
+    { x: 30, y: 50, z: -70 },
+    { x: -20, y: 55, z: -50 },
+    { x: 60, y: 48, z: -65 },
+    { x: 0, y: 52, z: -75 },
+    { x: -50, y: 47, z: -55 },
+    { x: 45, y: 53, z: -60 }
+  ];
+
+  cloudPositions.forEach(pos => {
+    const cloudGroup = new THREE.Group();
+    cloudGroup.position.set(pos.x, pos.y, pos.z);
+
+    // Create cloud puffs
+    const puffCount = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < puffCount; i++) {
+      const puffGeo = new THREE.SphereGeometry(3 + Math.random() * 2, 16, 16);
+      const puffMat = new THREE.MeshBasicMaterial({ 
+        color: 0xFFFFFF,
+        transparent: true,
+        opacity: 0.85
+      });
+      const puff = new THREE.Mesh(puffGeo, puffMat);
+      puff.position.set(
+        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 4
+      );
+      puff.scale.y = 0.6;
+      cloudGroup.add(puff);
+    }
+
+    scene.add(cloudGroup);
+  });
 }
 
 function createWickets() {
