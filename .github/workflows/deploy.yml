@@ -1,5 +1,6 @@
 name: Deploy to GitHub Pages
 
+# Retry deployment after temporary GitHub Pages service issue
 on:
   push:
     branches: [ main ]
